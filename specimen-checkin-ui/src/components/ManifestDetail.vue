@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import type { ManifestDetail } from '../types/manifest'
 
 const props = defineProps<{
@@ -10,10 +10,9 @@ const props = defineProps<{
 const emit = defineEmits<{
   receive: [specimenId: string]
   flag: [specimenId: string]
+  add: []
   close: []
 }>()
-
-const actionError = ref<string | null>(null)
 
 const canClose = computed(() => {
   return Boolean(props.manifest?.readyToClose)
@@ -38,7 +37,9 @@ function statusClass(status: string) {
       <header class="detail-header">
         <div>
           <p class="eyebrow">Specimen check-in</p>
+
           <h1>{{ manifest.code }}</h1>
+
           <p class="subtitle">
             Sent {{ new Date(manifest.sentAt).toLocaleString() }}
           </p>
@@ -80,7 +81,10 @@ function statusClass(status: string) {
         <div class="section-header">
           <div>
             <h2>Expected Specimens</h2>
-            <p>Confirm each physical bottle against the manifest.</p>
+
+            <p>
+              Confirm each physical bottle against the manifest.
+            </p>
           </div>
 
           <span
@@ -95,7 +99,10 @@ function statusClass(status: string) {
           </span>
         </div>
 
-        <div v-if="manifest.specimens.length === 0" class="empty-table">
+        <div
+          v-if="manifest.specimens.length === 0"
+          class="empty-table"
+        >
           No specimens found.
         </div>
 
@@ -121,7 +128,9 @@ function statusClass(status: string) {
               </td>
 
               <td>{{ specimen.patient }}</td>
+
               <td>{{ specimen.site }}</td>
+
               <td>{{ specimen.provider }}</td>
 
               <td>
@@ -137,7 +146,10 @@ function statusClass(status: string) {
                 <button
                   type="button"
                   class="receive-button"
-                  :disabled="specimen.status === 'Received'"
+                  :disabled="
+                    specimen.status === 'Received' ||
+                    specimen.status === 'Added'
+                  "
                   @click="emit('receive', specimen.id)"
                 >
                   Receive
@@ -146,7 +158,10 @@ function statusClass(status: string) {
                 <button
                   type="button"
                   class="flag-button"
-                  :disabled="specimen.status === 'Flagged'"
+                  :disabled="
+                    specimen.status === 'Flagged' ||
+                    specimen.status === 'Added'
+                  "
                   @click="emit('flag', specimen.id)"
                 >
                   Flag missing
@@ -157,9 +172,36 @@ function statusClass(status: string) {
         </table>
       </section>
 
-      <p v-if="actionError" class="error-message">
-        {{ actionError }}
-      </p>
+      <section
+        v-if="manifest.discrepancies?.length > 0"
+        class="discrepancy-card"
+      >
+        <div class="section-header">
+          <div>
+            <h2>Discrepancies</h2>
+
+            <p>
+              Review mismatches before closing the manifest.
+            </p>
+          </div>
+        </div>
+
+        <div
+          v-for="discrepancy in manifest.discrepancies"
+          :key="discrepancy.id"
+          class="discrepancy-row"
+        >
+          <div>
+            <strong>{{ discrepancy.type }}</strong>
+
+            <p>{{ discrepancy.note }}</p>
+          </div>
+
+          <span class="discrepancy-status">
+            {{ discrepancy.status }}
+          </span>
+        </div>
+      </section>
 
       <footer class="detail-footer">
         <div>
@@ -172,14 +214,24 @@ function statusClass(status: string) {
           </strong>
         </div>
 
-        <button
-          type="button"
-          class="close-button"
-          :disabled="!canClose"
-          @click="emit('close')"
-        >
-          Verify and close manifest
-        </button>
+        <div class="footer-actions">
+          <button
+            type="button"
+            class="add-button"
+            @click="emit('add')"
+          >
+            + Add off-manifest specimen
+          </button>
+
+          <button
+            type="button"
+            class="close-button"
+            :disabled="!canClose"
+            @click="emit('close')"
+          >
+            Verify and close manifest
+          </button>
+        </div>
       </footer>
     </template>
   </main>
@@ -235,7 +287,8 @@ h1 {
 
 .large-status,
 .ready-pill,
-.specimen-status {
+.specimen-status,
+.discrepancy-status {
   padding: 6px 10px;
   border-radius: 999px;
   font-size: 12px;
@@ -273,10 +326,15 @@ h1 {
   font-size: 24px;
 }
 
-.content-card {
+.content-card,
+.discrepancy-card {
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   overflow: hidden;
+}
+
+.discrepancy-card {
+  margin-top: 18px;
 }
 
 .section-header {
@@ -322,7 +380,8 @@ th {
   width: 210px;
 }
 
-.action-buttons {
+.action-buttons,
+.footer-actions {
   display: flex;
   gap: 8px;
 }
@@ -348,6 +407,11 @@ button:disabled {
 .flag-button {
   color: #991b1b;
   background: #fee2e2;
+}
+
+.add-button {
+  color: #1e40af;
+  background: #dbeafe;
 }
 
 .close-button {
@@ -379,13 +443,27 @@ button:disabled {
   background: #dbeafe;
 }
 
+.discrepancy-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.discrepancy-row p {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.discrepancy-status {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
 .empty-table {
   padding: 24px;
   color: #64748b;
-}
-
-.error-message {
-  margin-top: 12px;
-  color: #b91c1c;
 }
 </style>
