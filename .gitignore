@@ -6,3 +6,5 @@
 /SpecimenCheckIn/SpecimenCheckIn.Api/bin
 /SpecimenCheckIn/SpecimenCheckIn.Api/obj
 
+/SpecimenCheckIn/SpecimentCheckIn.Tests/bin/Debug/net8.0
+/SpecimenCheckIn/SpecimentCheckIn.Tests/obj
