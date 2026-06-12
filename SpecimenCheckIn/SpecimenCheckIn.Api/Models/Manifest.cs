@@ -1,4 +1,5 @@
 ﻿using SpecimenCheckIn.Api.Enums;
+using System.Collections.Generic;
 
 namespace SpecimenCheckIn.Api.Models;
 
@@ -20,7 +21,7 @@ public class Manifest
 
     public Clinic Clinic { get; set; } = null!;
 
-    public ICollection<Specimen> Specimens { get; set; } = [];
+    public ICollection<Specimen> Specimens { get; set; } = new List<Specimen>();
 
-    public ICollection<Discrepancy> Discrepancies { get; set; } = [];
+    public ICollection<Discrepancy> Discrepancies { get; set; } = new List<Discrepancy>();
 }

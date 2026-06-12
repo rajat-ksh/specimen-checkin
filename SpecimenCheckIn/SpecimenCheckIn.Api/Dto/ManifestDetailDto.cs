@@ -1,4 +1,6 @@
-﻿namespace SpecimenCheckIn.Api.Dto;
+﻿using System.Collections.Generic;
+
+namespace SpecimenCheckIn.Api.Dto;
 
 public class ManifestDetailDto
 {
@@ -7,6 +9,8 @@ public class ManifestDetailDto
     public string Code { get; set; } = string.Empty;
 
     public string Status { get; set; } = string.Empty;
+
+    public DateTime SentAt { get; set; }
 
     public int TotalSpecimens { get; set; }
 
@@ -20,5 +24,5 @@ public class ManifestDetailDto
 
     public bool ReadyToClose { get; set; }
 
-    public List<SpecimenDto> Specimens { get; set; } = [];
+    public List<SpecimenDto> Specimens { get; set; } = new List<SpecimenDto>();
 }

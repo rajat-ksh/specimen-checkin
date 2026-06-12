@@ -4,6 +4,8 @@ using SpecimenCheckIn.Api.Dto;
 using SpecimenCheckIn.Api.Enums;
 using SpecimenCheckIn.Api.Infrastructure;
 using SpecimenCheckIn.Api.Models;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace SpecimenCheckIn.Api.Services;
 
@@ -12,21 +14,67 @@ public class ManifestService(AppDbContext appDbContext, TenantContext tenantCont
     private readonly AppDbContext _db = appDbContext;
     private readonly TenantContext _tenant = tenantContext;
 
-    public async Task<List<Manifest>> GetManifestsAsync()
+    public async Task<List<ManifestSummaryDto>> GetManifestsAsync()
     {
         return await _db.Manifests
             .Where(x => x.LabId == _tenant.LabId)
             .OrderByDescending(x => x.SentAt)
+            .Select(m => new ManifestSummaryDto
+            {
+                Id = m.Id,
+                Code = m.Code,
+                Status = m.Status.ToString(),
+                SentAt = m.SentAt
+            })
             .ToListAsync();
     }
-    public async Task<Manifest?> GetManifestAsync(Guid id)
+
+    public async Task<ManifestDetailDto?> GetManifestAsync(Guid id)
     {
-        return await _db.Manifests
+        var manifest = await _db.Manifests
             .Include(x => x.Specimens)
             .Include(x => x.Discrepancies)
             .FirstOrDefaultAsync(x =>
                 x.Id == id &&
                 x.LabId == _tenant.LabId);
+
+        if (manifest is null)
+            return null;
+
+        var specimens = manifest.Specimens
+            .Select(s => new SpecimenDto
+            {
+                Id = s.Id,
+                Code = s.Code,
+                Patient = s.Patient,
+                Site = s.Site,
+                Provider = s.Provider,
+                Status = s.Status.ToString()
+            })
+            .ToList();
+
+        var total = specimens.Count;
+        var received = manifest.Specimens.Count(s => s.Status == SpecimenStatus.Received);
+        var pending = manifest.Specimens.Count(s => s.Status == SpecimenStatus.Pending);
+        var flagged = manifest.Specimens.Count(s => s.Status == SpecimenStatus.Flagged);
+        var added = manifest.Specimens.Count(s => s.Status == SpecimenStatus.Added);
+
+        var dto = new ManifestDetailDto
+        {
+            Id = manifest.Id,
+            Code = manifest.Code,
+            Status = manifest.Status.ToString(),
+            SentAt = manifest.SentAt,
+            TotalSpecimens = total,
+            ReceivedCount = received,
+            PendingCount = pending,
+            FlaggedCount = flagged,
+            AddedCount = added,
+            ReadyToClose = pending == 0,
+            Specimens = specimens
+        };
+
+        return dto;
     }
 
     public async Task ReceiveSpecimenAsync(
@@ -41,7 +89,7 @@ public class ManifestService(AppDbContext appDbContext, TenantContext tenantCont
                 x.Manifest.LabId == _tenant.LabId);
 
         if (specimen == null)
-            throw new Exception("Specimen not found");
+            throw new InvalidOperationException("Specimen not found");
 
         if (specimen.Status == SpecimenStatus.Received)
             return;

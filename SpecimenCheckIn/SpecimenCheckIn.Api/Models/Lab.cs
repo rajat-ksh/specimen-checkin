@@ -1,4 +1,6 @@
-﻿namespace SpecimenCheckIn.Api.Models;
+﻿using System.Collections.Generic;
+
+namespace SpecimenCheckIn.Api.Models;
 
 public class Lab
 {
@@ -6,6 +8,6 @@ public class Lab
 
     public string Name { get; set; } = string.Empty;
 
-    public ICollection<Clinic> Clinics { get; set; } = [];
-    public ICollection<Manifest> Manifests { get; set; } = [];
+    public ICollection<Clinic> Clinics { get; set; } = new List<Clinic>();
+    public ICollection<Manifest> Manifests { get; set; } = new List<Manifest>();
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.OpenApi.Models;
+using System.Collections.Generic;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace SpecimenCheckIn.Api.Infrastructure;
@@ -9,7 +10,7 @@ public class TenantHeaderOperationFilter : IOperationFilter
         OpenApiOperation operation,
         OperationFilterContext context)
     {
-        operation.Parameters ??= [];
+        operation.Parameters ??= new List<OpenApiParameter>();
 
         operation.Parameters.Add(
             new OpenApiParameter

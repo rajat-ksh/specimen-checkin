@@ -45,7 +45,10 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+// Global exception handling
+app.UseMiddleware<SpecimenCheckIn.Api.Infrastructure.ExceptionHandlingMiddleware>();
 
+// Tenant middleware enforces lab scoping for each request
 app.UseMiddleware<TenantMiddleware>();
 app.MapControllers();
 
