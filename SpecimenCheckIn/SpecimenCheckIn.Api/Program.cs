@@ -14,6 +14,16 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ManifestService>();
 builder.Services.AddScoped<TenantContext>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("frontend", policy =>
+    {
+        policy
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowAnyOrigin();
+    });
+});
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -46,8 +56,8 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 // Global exception handling
-app.UseMiddleware<SpecimenCheckIn.Api.Infrastructure.ExceptionHandlingMiddleware>();
-
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseCors("frontend");
 // Tenant middleware enforces lab scoping for each request
 app.UseMiddleware<TenantMiddleware>();
 app.MapControllers();
