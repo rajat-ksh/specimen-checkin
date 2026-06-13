@@ -97,6 +97,28 @@ Swagger should open at a URL similar to:
 https://localhost:7198/swagger
 ```
 
+Important HTTPS notes (development)
+1. Ensure the API is listening on HTTPS. Run with the HTTPS launch profile to bind the HTTPS port explicitly:
+
+```bash
+dotnet run --project SpecimenCheckIn.Api --launch-profile "https"
+```
+
+2. If your browser shows a certificate error, trust the ASP.NET Core development certificate on your machine:
+
+```bash
+dotnet dev-certs https --clean
+dotnet dev-certs https --trust
+```
+
+3. While developing you can also point the frontend at the API's HTTP URL (not recommended for production). Example HTTP URL used by the project:
+
+```text
+http://localhost:5179
+```
+
+4. Alternatively use the frontend dev server proxy to forward `/api` to the backend and avoid cross-origin/HTTPS issues. See the `specimen-checkin-ui` section below.
+
 ### 4. Configure the Frontend
 
 Update:
