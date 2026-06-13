@@ -1,6 +1,7 @@
 ﻿/.vs/
 /SpecimenCheckIn.Api/bin/
-/SpecimenCheckIn.Api/obj/debug/
-/SpecimenCheckIn.Api/obj/release/
-/SpecimenCheckIn.Test/bin/
-/SpecimenCheckIn.Test/obj/
+/SpecimenCheckIn.Api/obj/
+/SpecimenCheckIn.Tests/bin/
+/SpecimenCheckIn.Tests/obj/
+*.user
+*.suo
