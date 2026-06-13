@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { computed, reactive } from 'vue'
 import type { AddSpecimenRequest } from '../types/manifest'
 
 const props = defineProps<{
@@ -18,15 +18,49 @@ const form = reactive<AddSpecimenRequest>({
   provider: ''
 })
 
+const errors = reactive<Record<keyof AddSpecimenRequest, string>>({
+  code: '',
+  patient: '',
+  site: '',
+  provider: ''
+})
+
 function resetForm() {
   form.code = ''
   form.patient = ''
   form.site = ''
   form.provider = ''
+
+  errors.code = ''
+  errors.patient = ''
+  errors.site = ''
+  errors.provider = ''
 }
 
+function validateField(field: keyof AddSpecimenRequest) {
+  errors[field] = form[field].trim() ? '' : `${field.charAt(0).toUpperCase() + field.slice(1)} is required.`
+}
+
+function validateForm() {
+  validateField('code')
+  validateField('patient')
+  validateField('site')
+  validateField('provider')
+
+  return !errors.code && !errors.patient && !errors.site && !errors.provider
+}
+
+const isSubmitDisabled = computed(() => {
+  return (
+    !form.code.trim() ||
+    !form.patient.trim() ||
+    !form.site.trim() ||
+    !form.provider.trim()
+  )
+})
+
 function submit() {
-  if (!form.code.trim()) {
+  if (!validateForm()) {
     return
   }
 
@@ -58,22 +92,46 @@ function submit() {
       <div class="form-grid">
         <label>
           <span>Specimen code</span>
-          <input v-model="form.code" placeholder="SP-999" />
+          <input
+            v-model="form.code"
+            :class="{'input-error': errors.code}"
+            @blur="validateField('code')"
+            placeholder="SP-999"
+          />
+          <p v-if="errors.code" class="error-text">{{ errors.code }}</p>
         </label>
 
         <label>
           <span>Patient</span>
-          <input v-model="form.patient" placeholder="Synthetic patient name" />
+          <input
+            v-model="form.patient"
+            :class="{'input-error': errors.patient}"
+            @blur="validateField('patient')"
+            placeholder="Synthetic patient name"
+          />
+          <p v-if="errors.patient" class="error-text">{{ errors.patient }}</p>
         </label>
 
         <label>
           <span>Site</span>
-          <input v-model="form.site" placeholder="Collection site" />
+          <input
+            v-model="form.site"
+            :class="{'input-error': errors.site}"
+            @blur="validateField('site')"
+            placeholder="Collection site"
+          />
+          <p v-if="errors.site" class="error-text">{{ errors.site }}</p>
         </label>
 
         <label>
           <span>Provider</span>
-          <input v-model="form.provider" placeholder="Provider name" />
+          <input
+            v-model="form.provider"
+            :class="{'input-error': errors.provider}"
+            @blur="validateField('provider')"
+            placeholder="Provider name"
+          />
+          <p v-if="errors.provider" class="error-text">{{ errors.provider }}</p>
         </label>
       </div>
 
@@ -82,7 +140,12 @@ function submit() {
           Cancel
         </button>
 
-        <button type="button" class="primary-button" @click="submit">
+        <button
+          type="button"
+          class="primary-button"
+          @click="submit"
+          :disabled="isSubmitDisabled"
+        >
           Add specimen
         </button>
       </div>
@@ -156,6 +219,16 @@ input {
   border-radius: 8px;
 }
 
+.input-error {
+  border-color: #f97316;
+}
+
+.error-text {
+  margin: 6px 0 0;
+  color: #dc2626;
+  font-size: 12px;
+}
+
 .dialog-actions {
   justify-content: flex-end;
 }
@@ -176,5 +249,11 @@ button {
 .primary-button {
   color: white;
   background: #2563eb;
+}
+
+button:disabled,
+button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

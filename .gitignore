@@ -1,10 +1,6 @@
-﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
-
-/SpecimenCheckIn/.vs
-/SpecimenCheckIn/SpecimenCheckIn.Api/bin
-/SpecimenCheckIn/SpecimenCheckIn.Api/obj
-
-/SpecimenCheckIn/SpecimentCheckIn.Tests/bin/Debug/net8.0
-/SpecimenCheckIn/SpecimentCheckIn.Tests/obj
+﻿/.vs/
+/SpecimenCheckIn.Api/bin/
+/SpecimenCheckIn.Api/obj/debug/
+/SpecimenCheckIn.Api/obj/release/
+/SpecimenCheckIn.Test/bin/
+/SpecimenCheckIn.Test/obj/

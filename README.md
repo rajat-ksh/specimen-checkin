@@ -161,10 +161,27 @@ Lab B: 22222222-2222-2222-2222-222222222222
 
 The middleware stores the tenant in a scoped context. The service layer includes the tenant key in every read and write query, so route IDs alone cannot be used to access another lab's data.
 
+## 1. Session & state
+
+- Stateless authentication and tenant claims are used so each App Service instance can evaluate requests independently.
+- Distributed session state is preferred only when request reconstruction is impossible, because App Service scaling makes in-memory session unreliable.
+- Token-based request context avoids dependence on sticky load balancer sessions and supports horizontal scaling.
+
+## 2. HIPAA-aware handling
+
+- TLS is enforced for all API traffic and sensitive headers, because encryption in transit is essential for protected health information.
+- Persistent storage is protected with database encryption and minimal logging, because data at rest must remain confidential.
+- Logs avoid patient identifiers and store only operational details, because audit trails should not expose PHI.
+
+## 3. Tenant isolation
+
+- Tenant context is extracted from `X-Lab-Id` and stored in a scoped request context.
+- Every service query includes the tenant `LabId` filter so only the current tenant’s records are accessed.
+- Application-layer tenant checks are enforced consistently to prevent cross-tenant data access and maintain isolation.
+
 ---
 
 ## ☁️ Azure Topology
-
 ![Azure topology](docs/azure-topology.svg)
 
 Editable Draw.io source: [`docs/azure-topology.drawio`](docs/azure-topology.drawio)
