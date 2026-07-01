@@ -1,49 +1,51 @@
-using System.Net;
 using System.Text.Json;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 
 namespace SpecimenCheckIn.Api.Infrastructure;
 
-public class ExceptionHandlingMiddleware
+public sealed class ExceptionHandlingMiddleware : IExceptionHandler
 {
-    private readonly RequestDelegate _next;
-
-    public ExceptionHandlingMiddleware(RequestDelegate next)
+    public async ValueTask<bool> TryHandleAsync(
+        HttpContext httpContext,
+        Exception exception,
+        CancellationToken cancellationToken)
     {
-        _next = next;
+        var statusCode = GetStatusCode(exception);
+
+        httpContext.Response.StatusCode = statusCode;
+        httpContext.Response.ContentType = "application/problem+json";
+
+        var problem = new ProblemDetails
+        {
+            Type = GetProblemType(statusCode),
+            Title = GetTitle(exception, statusCode),
+            Status = statusCode,
+            Detail = exception is InvalidOperationException ? exception.Message : null,
+            Instance = httpContext.Request.Path
+        };
+
+        await httpContext.Response.WriteAsJsonAsync(problem, cancellationToken: cancellationToken);
+        return true;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    private static int GetStatusCode(Exception exception) => exception switch
     {
-        try
-        {
-            await _next(context);
-        }
-        catch (Exception ex)
-        {
-            await HandleExceptionAsync(context, ex);
-        }
-    }
+        InvalidOperationException invalid when invalid.Message.Contains("not found", StringComparison.OrdinalIgnoreCase) => StatusCodes.Status404NotFound,
+        InvalidOperationException => StatusCodes.Status400BadRequest,
+        _ => StatusCodes.Status500InternalServerError
+    };
 
-    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private static string GetProblemType(int statusCode) => statusCode switch
     {
-        context.Response.ContentType = "application/json";
+        StatusCodes.Status400BadRequest => "https://httpstatuses.com/400",
+        StatusCodes.Status404NotFound => "https://httpstatuses.com/404",
+        _ => "https://httpstatuses.com/500"
+    };
 
-        if (exception is InvalidOperationException)
-        {
-            var msg = exception.Message ?? "Invalid operation";
-            if (msg.Contains("not found", StringComparison.OrdinalIgnoreCase))
-            {
-                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                return context.Response.WriteAsync(JsonSerializer.Serialize(new { error = msg }));
-            }
-
-            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            return context.Response.WriteAsync(JsonSerializer.Serialize(new { error = msg }));
-        }
-
-        // unexpected
-        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-        var problem = new { error = "An unexpected error occurred." };
-        return context.Response.WriteAsync(JsonSerializer.Serialize(problem));
-    }
+    private static string GetTitle(Exception exception, int statusCode) => statusCode switch
+    {
+        StatusCodes.Status500InternalServerError => "An unexpected error occurred.",
+        _ => exception.Message
+    };
 }

@@ -1,13 +1,8 @@
 ﻿namespace SpecimenCheckIn.Api.Infrastructure;
 
-public class TenantMiddleware
+public class TenantMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next;
-
-    public TenantMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
+    private readonly RequestDelegate _next = next;
 
     public async Task InvokeAsync(
         HttpContext context,

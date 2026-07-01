@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SpecimenCheckIn.Api.Data;
 using SpecimenCheckIn.Api.Infrastructure;
@@ -13,6 +14,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<ManifestService>();
 builder.Services.AddScoped<TenantContext>();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ExceptionHandlingMiddleware>();
 
 builder.Services.AddCors(options =>
 {
@@ -53,11 +56,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+app.UseExceptionHandler();
 
-// Global exception handling
-app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors("frontend");
+
+app.UseAuthorization();
 // Tenant middleware enforces lab scoping for each request
 app.UseMiddleware<TenantMiddleware>();
 app.MapControllers();
